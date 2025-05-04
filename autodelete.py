@@ -15,7 +15,7 @@ from keep_alive import keep_alive
 from telegram.error import BadRequest
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGODB_URI', '')) # Add MongoDB url here
+client = MongoClient(os.getenv('MONGODB_URI', 'mongodb+srv://ansh:ansh2122@cluster0.ik1o5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')) # Add MongoDB url here
 db = client['autodelete']
 settings_collection = db['settings']
 
@@ -32,8 +32,8 @@ else:
     delete_timer = 60
     deletion_enabled = True
 # Made By Downloader Zone
-TOKEN = os.getenv('BOT_TOKEN', '') # Add Bot Token Here
-ADMIN_IDS = []  # Add more admin IDs as needed
+TOKEN = os.getenv('BOT_TOKEN', '7653040852:AAHgS-jtR_NXs3t3HhXm-cgls69vLKwlAjc') # Add Bot Token Here
+ADMIN_IDS = [7202724594]  # Add more admin IDs as needed
 
 def is_admin_or_sudo(user_id):
     return user_id in ADMIN_IDS or user_id in SUDO_USERS
