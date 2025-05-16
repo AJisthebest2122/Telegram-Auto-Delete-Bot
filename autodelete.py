@@ -69,10 +69,11 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status_text)
 
 async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
     if not is_admin_or_sudo(update.effective_user.id):
-        await update.message.reply_text("Unauthorized access.")
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can access settings.")
         return
-# Made By Downloader Zone
+    
     keyboard = [
         [InlineKeyboardButton("🕐 Set Delete Timer", callback_data="set_timer")],
         [InlineKeyboardButton("✅ Add Chat ID", callback_data="add_chat"),
@@ -89,51 +90,95 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("⚙️ Bot Settings Panel:", reply_markup=reply_markup)
 
-async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
+async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can access the bot status.")
+        return
+    
+    status_text = (
+        f"Bot is running.\n"
+        f"Delete timer: {delete_timer} seconds\n"
+        f"Deletion enabled: {deletion_enabled}\n"
+        f"Allowed chats: {', '.join(map(str, ALLOWED_CHAT_IDS)) or 'None'}\n"
+        f"Sudo Users: {', '.join(map(str, SUDO_USERS)) or 'None'}"
+    )
+    await update.message.reply_text(status_text)
+
+# Update for all relevant functions where settings can be changed:
+async def add_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can add a chat.")
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /add_chat <chat_id>")
+        return
     try:
-        await query.answer()
-    except BadRequest as e:
-        if "Query is too old" in str(e) or "query id is invalid" in str(e):
-            await query.message.edit_text("❌ This menu is too old. Please use /settings to open a new menu.")
-            return
-        raise
-
-    data = query.data
-
-    if data == "set_timer":
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text("Send me the new delete timer in seconds:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["awaiting_timer"] = True
-
-    elif data == "add_chat":
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text("Send me the Chat ID to add:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["awaiting_chat_add"] = True
-
-    elif data == "remove_chat":
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text("Send me the Chat ID to remove:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["awaiting_chat_remove"] = True
-
-    elif data == "add_sudo":
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text("Send me the User ID to add as Sudo:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["awaiting_sudo_add"] = True
-
-    elif data == "remove_sudo":
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text("Send me the User ID to remove from Sudo list:", reply_markup=InlineKeyboardMarkup(keyboard))
-        context.user_data["awaiting_sudo_remove"] = True
-
-    elif data == "toggle_deletion":
-        global deletion_enabled
-        deletion_enabled = not deletion_enabled
+        chat_id = int(context.args[0])
+        ALLOWED_CHAT_IDS.add(chat_id)
         save_settings()
-        status = "enabled" if deletion_enabled else "disabled"
-        keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
-        await query.edit_message_text(f"🛠 Message deletion is now *{status}*.", reply_markup=InlineKeyboardMarkup(keyboard))
+        await update.message.reply_text(f"✅ Chat ID {chat_id} added.", parse_mode="Markdown")
+    except ValueError:
+        await update.message.reply_text("❌ Invalid chat ID.")
 
+async def remove_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can remove a chat.")
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /remove_chat <chat_id>")
+        return
+    try:
+        chat_id = int(context.args[0])
+        ALLOWED_CHAT_IDS.discard(chat_id)
+        save_settings()
+        await update.message.reply_text(f"✅ Chat ID {chat_id} removed.", parse_mode="Markdown")
+    except ValueError:
+        await update.message.reply_text("❌ Invalid chat ID.")
+
+async def add_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can add a sudo user.")
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /add_sudo <user_id>")
+        return
+    try:
+        user_id = int(context.args[0])
+        SUDO_USERS.add(user_id)
+        save_settings()
+        await update.message.reply_text(f"✅ User ID {user_id} added as Sudo.", parse_mode="Markdown")
+    except ValueError:
+        await update.message.reply_text("❌ Invalid user ID.")
+
+async def remove_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can remove a sudo user.")
+        return
+    if not context.args:
+        await update.message.reply_text("Usage: /remove_sudo <user_id>")
+        return
+    try:
+        user_id = int(context.args[0])
+        SUDO_USERS.discard(user_id)
+        save_settings()
+        await update.message.reply_text(f"✅ User ID {user_id} removed from Sudo.", parse_mode="Markdown")
+    except ValueError:
+        await update.message.reply_text("❌ Invalid user ID.")
+
+async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Check if the user is an admin or sudo
+    if not is_admin_or_sudo(update.effective_user.id):
+        await update.message.reply_text("Unauthorized access. Only admins or sudo users can toggle deletion.")
+        return
+    global deletion_enabled
+    deletion_enabled = not deletion_enabled
+    save_settings()
+    await update.message.reply_text(f"✅ Deletion {'enabled' if deletion_enabled else 'disabled'}.")
     elif data == "view_status":
         status_text = (
             f"🤖 *Bot Status:*\n"
