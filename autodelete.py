@@ -179,7 +179,7 @@ async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     deletion_enabled = not deletion_enabled
     save_settings()
     await update.message.reply_text(f"✅ Deletion {'enabled' if deletion_enabled else 'disabled'}.")
-     elif data == "view_status":
+    elif data == "view_status":
         status_text = (
             f"🤖 *Bot Status:*\n"
             f"Delete Timer: {delete_timer} seconds\n"
