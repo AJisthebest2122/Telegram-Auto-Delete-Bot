@@ -15,7 +15,7 @@ from keep_alive import keep_alive
 from telegram.error import BadRequest
 
 # MongoDB setup
-client = MongoClient(os.getenv('MONGODB_URI', 'mongodb+srv://ansh:ansh2122@cluster0.ik1o5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'))  # Add MongoDB URL here
+client = MongoClient(os.getenv('MONGODB_URI', 'mongodb+srv://ansh:ansh2122@cluster0.ik1o5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'))  # MongoDB URI
 db = client['autodelete']
 settings_collection = db['settings']
 
@@ -32,19 +32,23 @@ else:
     delete_timer = 60
     deletion_enabled = True
 
-TOKEN = os.getenv('BOT_TOKEN', '7653040852:AAHgS-jtR_NXs3t3HhXm-cgls69vLKwlAjc')  # Add Bot Token here
+# Add Bot Token and Admin IDs
+TOKEN = os.getenv('BOT_TOKEN', '7653040852:AAHgS-jtR_NXs3t3HhXm-cgls69vLKwlAjc')  # Bot Token
 ADMIN_IDS = [7202724594]  # Add more admin IDs as needed
 
 def is_admin_or_sudo(user_id):
+    """Check if the user is an admin or a sudo user."""
     return user_id in ADMIN_IDS or user_id in SUDO_USERS
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Start command, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
     await update.message.reply_text("Welcome, Admin! Use /status to check bot status or /help for commands.")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Help command, listing available bot commands."""
     await update.message.reply_text(
         "/start - Start bot\n"
         "/help - Show help\n"
@@ -56,6 +60,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show bot status, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
@@ -69,6 +74,7 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(status_text)
 
 async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Settings panel, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized access.")
         return
@@ -89,6 +95,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("⚙️ Bot Settings Panel:", reply_markup=reply_markup)
 
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Callback query handler for buttons in the settings panel."""
     query = update.callback_query
     try:
         await query.answer()
@@ -153,6 +160,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         context.user_data.clear()
 
 async def add_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Add chat ID to allowed chats, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -168,6 +176,7 @@ async def add_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid chat ID.")
 
 async def remove_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Remove chat ID from allowed chats, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -183,6 +192,7 @@ async def remove_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid chat ID.")
 
 async def add_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Add user ID to sudo users, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -198,6 +208,7 @@ async def add_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid user ID.")
 
 async def remove_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Remove user ID from sudo users, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -213,6 +224,7 @@ async def remove_sudo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("❌ Invalid user ID.")
 
 async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Toggle message deletion, only accessible by admins or sudo users."""
     if not is_admin_or_sudo(update.effective_user.id):
         await update.message.reply_text("Unauthorized.")
         return
@@ -222,6 +234,7 @@ async def toggle_deletion(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"✅ Deletion {'enabled' if deletion_enabled else 'disabled'}.")
 
 def save_settings():
+    """Save the settings to MongoDB."""
     settings_collection.update_one(
         {"bot_settings": "general"},
         {"$set": {
@@ -233,6 +246,7 @@ def save_settings():
         upsert=True
     )
 
+# Message handler for auto-deletion
 async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
 
