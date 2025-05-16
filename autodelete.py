@@ -98,11 +98,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Callback query handler for buttons in the settings panel."""
     query = update.callback_query
     if not is_admin_or_sudo(update.effective_user.id):
-        # Send a separate message informing the user of unauthorized access
+        # If it's a callback query and the user is unauthorized, send a separate message
         user_name = update.effective_user.username or (update.effective_user.first_name + ' ' + (update.effective_user.last_name or ''))
         
         # Send one message with unauthorized access notification
-        await update.message.reply_text(f"@{user_name} You don't have permission to access this menu.")
+        await context.bot.send_message(
+            chat_id=query.message.chat.id,  # Send the message in the same chat
+            text=f"@{user_name} You don't have permission to access this menu."
+        )
         
         # Do not change or close the settings menu, just ignore further interactions from the user
         return
