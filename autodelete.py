@@ -99,8 +99,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     if not is_admin_or_sudo(update.effective_user.id):
         await query.answer()
-        # Reply with unauthorized access without closing the settings menu
-        await query.edit_message_text("Unauthorized access.")
+        
+        # Get the username or fallback to user name (first_name + last_name if no username)
+        user_name = update.effective_user.username or (update.effective_user.first_name + ' ' + (update.effective_user.last_name or ''))
+        
+        # Reply with unauthorized access while keeping the settings menu open
+        await query.edit_message_text(f"@{user_name} Unauthorized access.")
+        
+        # Do not clear the user data, so the settings menu stays open
         return
     
     try:
@@ -113,6 +119,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data
 
+    # Continue with your existing logic
     if data == "set_timer":
         keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
         await query.edit_message_text("Send me the new delete timer in seconds:", reply_markup=InlineKeyboardMarkup(keyboard))
