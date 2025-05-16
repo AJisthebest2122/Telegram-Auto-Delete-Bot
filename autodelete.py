@@ -99,14 +99,14 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     if not is_admin_or_sudo(update.effective_user.id):
         await query.answer()
-        
+
         # Get the username or fallback to user name (first_name + last_name if no username)
         user_name = update.effective_user.username or (update.effective_user.first_name + ' ' + (update.effective_user.last_name or ''))
         
-        # Reply with unauthorized access while keeping the settings menu open
-        await query.edit_message_text(f"@{user_name} Unauthorized access.")
+        # Send one message with unauthorized access notification
+        await query.edit_message_text(f"@{user_name} You don't have permission to access this menu.")
         
-        # Do not clear the user data, so the settings menu stays open
+        # Ignore their command and don't allow further interaction
         return
     
     try:
@@ -365,4 +365,3 @@ if __name__ == "__main__":
 
     print("Bot is running...")
     app.run_polling()
-    # Made By Downloader Zone
