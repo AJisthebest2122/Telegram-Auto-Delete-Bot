@@ -99,6 +99,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     if not is_admin_or_sudo(update.effective_user.id):
         await query.answer()
+        # Reply with unauthorized access without closing the settings menu
         await query.edit_message_text("Unauthorized access.")
         return
     
@@ -149,8 +150,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         status_text = (
             f"🤖 *Bot Status:*\n"
             f"Delete Timer: {delete_timer} seconds\n"
-            f"Deletion Enabled: `{deletion_enabled}`\n"
-            f"Allowed Chats: `{', '.join(map(str, ALLOWED_CHAT_IDS)) or 'None'}`\n"
+            f"Deletion Enabled: {deletion_enabled}\n"
+            f"Allowed Chats: {', '.join(map(str, ALLOWED_CHAT_IDS)) or 'None'}\n"
             f"Sudo Users: {', '.join(map(str, SUDO_USERS)) or 'None'}"
         )
         keyboard = [[InlineKeyboardButton("🔙 Back", callback_data="back_to_settings")]]
