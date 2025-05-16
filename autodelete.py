@@ -97,6 +97,11 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Callback query handler for buttons in the settings panel."""
     query = update.callback_query
+    if not is_admin_or_sudo(update.effective_user.id):
+        await query.answer()
+        await query.edit_message_text("Unauthorized access.")
+        return
+    
     try:
         await query.answer()
     except BadRequest as e:
